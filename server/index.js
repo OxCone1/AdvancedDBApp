@@ -1,27 +1,22 @@
 const express = require('express');
 const cors = require('cors');
-const mysql = require('mysql2/promise');
-const config = require('./config');
+const router = require('./routes/router.js');
 
+const PORT = 3001;
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-const port = 3001;
+app.use(express.urlencoded({extended: false}));
 
-app.get('/', async (req, res) => {
-    try {
-        const connction = await mysql.createConnection(config.db)
-        const [result,] = await connction.execute('select * from task')
-        
-        if(!result) result=[]
-        res.status(200).json(result);
-    }
-    catch(err){
-        res.status(500).json({err: err.message});
-    }
-});
+app.use('/', router);
 
+app.use((err, req, res, next) => {
+    const statusCode = err.statusCode || 500;
+    console.error(err.message, err.stack);
+    res.status(statusCode).json({error: err.message});
+    return;
+})
 
-app.listen(port)
+app.listen(PORT);
